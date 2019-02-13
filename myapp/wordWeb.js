@@ -1,19 +1,19 @@
 const guessedList = require(`./guessedList`);
-const list = [];
-const examples = require(`./word`);
-var random1 = Math.floor(Math.random()*(examples.exampleList.length));
-var random2 = Math.floor(Math.random()*(examples.exampleList.length));
-var picAddress = "images/pigu" + random2 + ".jpg";
-var varifiedWord = examples.exampleList[random1];
 const wordList = require(`./wordList`);
 const cheerio = require('cheerio');
-console.log(picAddress);
 
 
 const wordWeb = {
-    wordWeb: function(word) {
-        let len = list.length;
+    wordWeb: function(word,wordlist,varifiedWord,list,picAddress) {
         console.log(varifiedWord);
+        var object = {};
+        object['word'] = word;
+        object['wordlist'] = wordlist;
+        object['varifiedWord'] = varifiedWord;
+        object['list']=list;
+        object['picAddress'] = picAddress;
+        var json = JSON.stringify(object);
+        let len = list.length;
         return`
         <!DOCTYPE html>
 <html>
@@ -30,13 +30,13 @@ const wordWeb = {
         </div>
         <div class = "guessed">
             <div class = "wordTitle">Word List</div>
-            ${wordList.wordList(examples.exampleList)}
+            ${wordList.wordList(wordlist)}
         </div>
         <div class="guess">
             <div class="subtitle">Word Game</div>
             <form action = "/submit" method = "POST">
             <input class="input" name = "text" type="text" value="Guess the word" onfocus="if (value =='Guess the word'){value =''}"onblur="if (value ==''){value='Guess the word'}"/>
-
+            <input type="hidden" name = "json" id="rakuGridJsonData" value='${json}'/>
             <div class = "buttonArea">
                 <button type = "submit" class = "button">That's it</button> 
                 </form>
@@ -44,13 +44,13 @@ const wordWeb = {
                 <button class = "button">New Game</button>
                 </form>
             </div>
-                  ${wordWeb.result(word)}    
+                  ${wordWeb.result(word,wordlist,varifiedWord)}    
             <div class = "timesArea">
                 You have tried ${len} times
             </div>
         </div>
     </div>
-    ${wordWeb.photoArea(word)}
+    ${wordWeb.photoArea(word,wordlist,picAddress,varifiedWord)}
         <script src="javascripts/dist/blurify.js"></script>
 <script>
     (function () {
@@ -68,16 +68,16 @@ const wordWeb = {
         `;
     },
 
-    result:function(word){
-        if(wordWeb.isInList(word)){
-            if(wordWeb.numOfDiffs(word) === word.length){
+    result:function(word,wordlist,varifiedWord){
+        if(wordWeb.isInList(word,wordlist)){
+            if(wordWeb.numOfDiffs(word,varifiedWord) === word.length){
                 return`<div class = "answerArea">
                 Congratulations! You have got the right answer!
                 </div>`;
             }else{
                 return `
                 <div class = "answerArea">
-                You have ${wordWeb.numOfDiffs(word)} right
+                You have ${wordWeb.numOfDiffs(word,varifiedWord)} right
                 </div>`; 
             }
         }else{
@@ -85,8 +85,8 @@ const wordWeb = {
         }
     },
 
-    photoArea:function(word){
-        if(wordWeb.isInList(word) && wordWeb.numOfDiffs(word) === word.length){
+    photoArea:function(word,wordlist,picAddress,varifiedWord){
+        if(wordWeb.isInList(word,wordlist) && wordWeb.numOfDiffs(word,varifiedWord) === word.length){
                 return`<div class = "photo">
                 <img src=${picAddress} alt="" class="avatar">
                 </div>`;
@@ -99,36 +99,29 @@ const wordWeb = {
     },
     addList,
     numOfDiffs,
-    isInList,
-    clear,
-    newGame
+    isInList
 };
 
 
-function addList(word){
-    if(isInList(word)){
+function addList(word,list,wordlist){
+    if(isInList(word,wordlist)){
         list.push(word);
     }
 }
 
 function newGame(){
-    random1 = Math.floor(Math.random()*(examples.exampleList.length));
-    random2 = Math.floor(Math.random()*(examples.exampleList.length));
-    picAddress = "images/pigu" + random2 + ".jpg";
-    varifiedWord = examples.exampleList[random1];
-    console.log(picAddress);
+    // random1 = Math.floor(Math.random()*(examples.exampleList.length));
+    // random2 = Math.floor(Math.random()*(examples.exampleList.length));
+    // picAddress = "images/pigu" + random2 + ".jpg";
+    // varifiedWord = examples.exampleList[random1];
+    // console.log(picAddress);
 }
 
 
-function clear(){
-    list.splice(0,list.length);
-    newGame();
-}
-
-function numOfDiffs(word){
+function numOfDiffs(word,varifiedWord){
     let num = 0;
     word = word.toLowerCase();
-    varifiedWord1 = varifiedWord.toLowerCase();
+    varifiedWord1 = varifiedWord.toString().toLowerCase();
     words = word.split("");
     varifiedWords = varifiedWord1.split("");
     const visited = [];
@@ -148,10 +141,10 @@ function numOfDiffs(word){
     return num;
 }
 
-function isInList(word){
+function isInList(word,wordlist){
     wordUp = word.toUpperCase();
     wordLo = word.toLowerCase();
-    if(examples.exampleList.includes(wordUp) || examples.exampleList.includes(wordUp)){
+    if(wordlist.includes(wordUp) || wordlist.includes(wordUp)){
         return true;
     }else{
         return false;

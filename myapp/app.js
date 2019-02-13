@@ -4,6 +4,10 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const wordWeb = require('./wordWeb');
+const examples = require(`./word`);
+request = require('request-json');
+var wordlist = examples.exampleList;
+var client = request.createClient('http://localhost:3000/');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -21,21 +25,30 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-	res.send(wordWeb.wordWeb(""));
+  var random1 = Math.floor(Math.random()*(wordlist.length));
+  var random2 = Math.floor(Math.random()*(wordlist.length));
+  var picAddress = "images/pigu" + random2 + ".jpg";
+  var varifiedWord = wordlist[random1];
+  const list = [];
+	res.send(wordWeb.wordWeb("",wordlist,varifiedWord,list,picAddress));
 	// res.send(chatWeb.chatPage(chat));
   });
 
 app.use('/users', usersRouter);
 
 app.post('/submit',(req,res) => {
-  const word = req.body.text;
-  wordWeb.addList(word);
-  res.send(wordWeb.wordWeb(word));
+  obj = JSON.parse(req.body.json);
+  console.log(obj.varifiedWord);
+  obj.list.push(req.body.text);
+  // wordWeb.addList(word,wordlist,list);
+  // res.send(wordWeb.wordWeb(word));
+  res.send(wordWeb.wordWeb(req.body.text,obj.wordlist,obj.varifiedWord,obj.list,obj.picAddress));
 });
 
+
+
 app.post('/clear',(req,res) => {
-  wordWeb.clear();
-  res.send(wordWeb.wordWeb(""));
+   res.redirect('/');
 });
 
 // catch 404 and forward to error handler
